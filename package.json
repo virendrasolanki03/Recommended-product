@@ -1,0 +1,21 @@
+{
+  "name": "shopify-recommendation-app-proxy",
+  "version": "1.0.0",
+  "description": "Shopify App Proxy integration for secure, personalized product recommendations",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "shopify",
+    "app-proxy",
+    "recommendations"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-cache": "^5.1.2"
+  }
+}

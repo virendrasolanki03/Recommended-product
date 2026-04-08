@@ -1,0 +1,142 @@
+{% comment %}
+  ============================================================================
+  Product Recommendation Section — Product Page
+  ============================================================================
+  Place this snippet in your product page template (e.g., product.liquid or
+  a product section) using:
+
+    {% render 'product-recommendation-section', product: product %}
+
+  This passes the current product object so the proxy can return
+  context-aware "You May Also Like" recommendations.
+
+  The current product is excluded from the recommendation results.
+
+  Security:
+    - No API keys or secrets appear in this file.
+    - The customer ID is injected server-side by Shopify via the proxy.
+    - product.id is safe to send — it's public storefront data.
+  ============================================================================
+{% endcomment %}
+
+<div id="product-recommendations" class="recommendations-wrapper recommendations-wrapper--product">
+  {% if customer %}
+    {%- comment -%} Loading state {%- endcomment -%}
+    <div id="product-rec-loading" class="rec-loading">
+      <div class="rec-loading__header">
+        <div class="rec-skeleton rec-skeleton--title"></div>
+        <div class="rec-skeleton rec-skeleton--subtitle"></div>
+      </div>
+      <div class="rec-loading__grid">
+        <div class="rec-skeleton rec-skeleton--card"></div>
+        <div class="rec-skeleton rec-skeleton--card"></div>
+        <div class="rec-skeleton rec-skeleton--card"></div>
+        <div class="rec-skeleton rec-skeleton--card"></div>
+      </div>
+    </div>
+
+    <div id="product-rec-content" style="display:none;"></div>
+
+    <script>
+      (function () {
+        'use strict';
+
+        var productId = '{{ product.id }}';
+        var proxyUrl = '/a/recommendation/recommendations?product_id=' + encodeURIComponent(productId);
+        var container = document.getElementById('product-rec-content');
+        var loader = document.getElementById('product-rec-loading');
+
+        fetch(proxyUrl, {
+          method: 'GET',
+          credentials: 'same-origin',
+          headers: { 'Accept': 'text/html' }
+        })
+          .then(function (response) {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.text();
+          })
+          .then(function (html) {
+            container.innerHTML = html;
+            container.style.display = 'block';
+            loader.style.display = 'none';
+          })
+          .catch(function (err) {
+            console.error('[product-recommendations]', err);
+            loader.style.display = 'none';
+            container.innerHTML =
+              '<p style="text-align:center;color:#999;padding:2rem;">Unable to load recommendations.</p>';
+            container.style.display = 'block';
+          });
+      })();
+    </script>
+  {% else %}
+    <div class="rec-guest-prompt">
+      <div class="rec-guest-prompt__inner">
+        <svg class="rec-guest-prompt__icon" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <h3 class="rec-guest-prompt__title">See What Others Are Buying</h3>
+        <p class="rec-guest-prompt__text">Sign in to get personalised recommendations based on this product.</p>
+        <a href="/account/login" class="rec-guest-prompt__cta">Sign In</a>
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+  /* ── Product-page-specific overrides ── */
+  .recommendations-wrapper--product {
+    margin-top: 4rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid #eee;
+  }
+
+  /* Reuse base styles from recommendation-section.liquid */
+  .recommendations-wrapper {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  .rec-loading__header { text-align: center; margin-bottom: 2rem; }
+  .rec-loading__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+  .rec-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
+  .rec-skeleton--title { width: 220px; height: 28px; margin: 0 auto 8px; }
+  .rec-skeleton--subtitle { width: 180px; height: 16px; margin: 0 auto; }
+  .rec-skeleton--card { height: 360px; border-radius: 12px; }
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .rec-guest-prompt { display: flex; justify-content: center; padding: 2.5rem 1rem; }
+  .rec-guest-prompt__inner { text-align: center; max-width: 400px; }
+  .rec-guest-prompt__icon { color: #6c5ce7; margin-bottom: 0.75rem; }
+  .rec-guest-prompt__title { font-size: 1.2rem; font-weight: 700; color: #1a1a2e; margin: 0 0 0.4rem; }
+  .rec-guest-prompt__text { color: #777; font-size: 0.9rem; line-height: 1.5; margin: 0 0 1rem; }
+  .rec-guest-prompt__cta {
+    display: inline-block;
+    padding: 0.6rem 1.75rem;
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .rec-guest-prompt__cta:hover { opacity: 0.9; transform: translateY(-2px); }
+  @media (max-width: 600px) {
+    .rec-loading__grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .rec-skeleton--card { height: 240px; }
+  }
+</style>
